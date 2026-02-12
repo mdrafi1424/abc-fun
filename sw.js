@@ -1,10 +1,11 @@
 const CACHE_NAME = 'abc-fun-v1';
+const BASE = '/abc-fun/';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png',
+  BASE,
+  BASE + 'index.html',
+  BASE + 'manifest.json',
+  BASE + 'icons/icon-192x192.png',
+  BASE + 'icons/icon-512x512.png',
   'https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@700;900&display=swap'
 ];
 
@@ -32,10 +33,12 @@ self.addEventListener('activate', (event) => {
 
 // Fetch — serve from cache first, fallback to network
 self.addEventListener('fetch', (event) => {
+  // Skip non-GET requests
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
     caches.match(event.request).then((cached) => {
       return cached || fetch(event.request).then((response) => {
-        // Cache new successful requests
         if (response.status === 200) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
@@ -43,9 +46,8 @@ self.addEventListener('fetch', (event) => {
         return response;
       });
     }).catch(() => {
-      // Offline fallback
       if (event.request.destination === 'document') {
-        return caches.match('/index.html');
+        return caches.match(BASE + 'index.html');
       }
     })
   );
